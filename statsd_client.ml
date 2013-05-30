@@ -21,7 +21,6 @@ module Make(U : sig
   type file_descr
   val socket : Unix.socket_domain -> Unix.socket_type -> int -> file_descr
   val gethostbyname : string -> Unix.host_entry _r
-  val getprotobyname : string -> Unix.protocol_entry _r
   val sendto :
     file_descr ->
     string -> int -> int ->
@@ -38,17 +37,18 @@ end) = struct
   let send_with_ipaddr_and_port ipaddr port sample_rate data =
     if sample_rate >= 1.0 || sample_rate >= Random.float 1.0 then
       U.catch (fun () ->
-        U.getprotobyname "udp" >>= fun protocol_entry ->
+        (* getprotobyname call hangs on Mac OS X 10.8.3 -->> Removed  *)
+        (* U.getprotobyname "udp" >>= fun protocol_entry ->
+        let proto = protocol_entry.Unix.p_proto in
+        *)
+        let proto = 17 (* UDP *) in
         (* Get or make the socket *)
         let socket =
           match !socket_ref with
             | Some s -> s
             | None   ->
               !log_debug "Creating statsd socket";
-              let s =
-                U.socket Unix.PF_INET Unix.SOCK_DGRAM
-                  protocol_entry.Unix.p_proto
-              in
+              let s = U.socket Unix.PF_INET Unix.SOCK_DGRAM proto in
               socket_ref := Some s;
               s
         in
