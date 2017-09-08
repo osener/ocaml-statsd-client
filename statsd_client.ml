@@ -134,6 +134,7 @@ module Sync = Make (
     let list_iter f lst = List.iter f lst
 
     include Unix
+    let socket dom typ proto = Unix.socket dom typ proto
   end
 )
 
@@ -149,5 +150,6 @@ module Lwt = Make (
     let list_iter = Lwt_list.iter_p
 
     include Lwt_unix
+    let socket dom typ proto = Lwt_unix.socket dom typ proto
   end
 )
