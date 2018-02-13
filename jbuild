@@ -1,0 +1,6 @@
+(jbuild_version 1)
+
+(library
+ ((name statsd_client)
+  (public_name statsd-client)
+  (libraries (lwt.unix))))

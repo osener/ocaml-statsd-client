@@ -9,9 +9,8 @@ Installation
 
 Requires:
 
-* [findlib](http://projects.camlcity.org/projects/findlib.html)
-  (ocamlfind command)
-* [lwt](http://ocsigen.org/lwt/api/Lwt)
+* [dune](https://github.com/ocaml/dune)
+* [lwt](https://github.com/ocsigen/lwt)
 
 Build:
 
