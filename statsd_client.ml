@@ -20,7 +20,6 @@ module Make(U : sig
   (** include Lwt_unix or Unix depending on your use *)
   type file_descr
   val socket : Unix.socket_domain -> Unix.socket_type -> int -> file_descr
-  val gethostbyname : string -> Unix.host_entry _r
   val sendto :
     file_descr ->
     string -> int -> int ->
