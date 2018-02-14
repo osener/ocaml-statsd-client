@@ -17,7 +17,6 @@ module Make(U : sig
   val return         : 'a -> 'a _r
   val list_iter      : ('a -> unit _r) -> 'a list -> unit _r
 
-  (** include Lwt_unix or Unix depending on your use *)
   type file_descr
   val socket : Unix.socket_domain -> Unix.socket_type -> int -> file_descr
   val sendto :
@@ -150,5 +149,50 @@ module Lwt = Make (
 
     include Lwt_unix
     let socket dom typ proto = Lwt_unix.socket dom typ proto
+  end
+)
+
+module Async = Make (
+  struct
+    open Core
+    open Async
+
+    let ipaddr () = !ipaddr
+    let port () = !port
+
+    type 'a _r = 'a Deferred.t
+    let ( >>= ) = ( >>= )
+    let return = return
+    let catch f error =
+      try_with f >>= function
+      | Ok d -> return d
+      | Error e -> error e
+    let list_iter f l = Deferred.List.iter ~f l
+    let close fd = Unix.close fd
+
+    type file_descr = Async_unix.Fd.t
+
+    let socket domain typ ip_protocol_num =
+      let socket_type =
+        match domain, typ, ip_protocol_num with
+        | Unix.PF_INET, Unix.SOCK_DGRAM, 17 (* UDP *) -> Socket.Type.udp
+        | Unix.PF_INET, Unix.SOCK_STREAM, 6 (* TCP *) -> Socket.Type.tcp
+        | _ -> failwith "Protocol not recognized"
+      in
+      Socket.fd (Socket.create socket_type)
+
+    let inet_addr_exn = function
+      | Unix.ADDR_INET (inet_addr, port) ->
+        Socket.Address.Inet.create inet_addr ~port
+      | Unix.ADDR_UNIX _ -> failwith "Unix domain addresses not supported"
+
+    let sendto fd msg offset msg_length flags socket_address =
+      match Udp.sendto () with
+      | Error e -> return (-1)
+      | Ok send ->
+        let buf = msg |> Iobuf.of_string |> Iobuf.read_only in
+        let inet_addr = inet_addr_exn socket_address in
+        send fd buf inet_addr
+        >>| fun () -> msg_length
   end
 )

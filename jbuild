@@ -3,4 +3,4 @@
 (library
  ((name statsd_client)
   (public_name statsd-client)
-  (libraries (lwt.unix))))
+  (libraries (async lwt.unix))))

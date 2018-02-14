@@ -11,6 +11,7 @@ Requires:
 
 * [dune](https://github.com/ocaml/dune)
 * [lwt](https://github.com/ocsigen/lwt)
+* [async](https://github.com/janestreet/async)
 
 Build:
 
