@@ -1,15 +1,8 @@
 (** Send statistics to the stats daemon over UDP
 
-    Both a synchronous (Sync) and an asynchronous (Lwt) version are provided.
+    Synchronous (Sync) and two asynchronous (Lwt & Async) versions are provided.
+    Module aliasing is occuring here for backwards compatibility.
 *)
 module Sync = Statsd_client_sync.T
 module Lwt = Statsd_client_lwt.T
-module Async :
-  sig
-    val gauge : ?sample_rate:float -> string -> int -> unit Async.Deferred.t
-    val timing : ?sample_rate:float -> string -> int -> unit Async.Deferred.t
-    val timingf : ?sample_rate:float -> string -> float -> unit Async.Deferred.t
-    val update_stats : ?sample_rate:float -> int -> string list -> unit Async.Deferred.t
-    val increment : ?sample_rate:float -> string list -> unit Async.Deferred.t
-    val decrement : ?sample_rate:float -> string list -> unit Async.Deferred.t
-  end
+module Async = Statsd_client_async.T
