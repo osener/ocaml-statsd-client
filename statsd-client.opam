@@ -16,7 +16,6 @@ build: [
 depends: [
   "jbuilder" {build}
   "lwt"
-  "async"
 ]
 
 available: [ ocaml-version >= "4.04.2" ]
