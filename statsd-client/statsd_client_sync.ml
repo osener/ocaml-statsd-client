@@ -1,4 +1,4 @@
-module T = Statsd_client_core.Make (
+include Statsd_client_core.Make (
   struct
     let ipaddr () = !Statsd_client_core.ipaddr
     let port () = !Statsd_client_core.port
