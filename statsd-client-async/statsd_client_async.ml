@@ -1,4 +1,4 @@
-module T = Statsd_client_core.Make (
+include Statsd_client_core.Make (
   struct
     open Core
     open Async
