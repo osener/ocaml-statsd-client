@@ -17,5 +17,3 @@ depends: [
   "jbuilder" {build}
   "lwt"
 ]
-
-available: [ ocaml-version >= "4.04.2" ]
