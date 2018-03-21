@@ -11,6 +11,32 @@ end
 
 module Config : C
 
+(** Formats guage metric type *)
+val fmt_guage : int -> string
+
+(** Formats time metric type *)
+val fmt_time : int -> string
+
+(** Formats counting metric type *)
+val fmt_counting : int -> string
+
+(** Map sample_rate to the string statsd expects *)
+val fmt_sample_rate : float -> string
+
+(** Formats statsd payload according to statsd:
+    ```
+    <metricname>:<value>|<type>|@<sample rate>
+    ```
+    For more details see: https://github.com/etsy/statsd *)
+val fmt_statsd_payload
+  : sample_rate:float
+  -> (string * string)
+  (** Tuple is expected to be of the form (<metric_name>, <value>|<type>) *)
+  -> string
+
+(** converts a float of seconds to an int of milliseconds *)
+val sec_to_ms : float -> int
+
 module type IO = sig
   val ipaddr         : unit -> string option
     (** Get the host ip address.  Allows for dynamic setting *)
@@ -38,9 +64,8 @@ module type T = sig
   type file_descr
   val ( >>= ) : 'a _r -> ('a -> 'b _r) -> 'b _r
   val socket_ref : file_descr option ref
-  val send_with_ipaddr_and_port :
-    string -> int -> float -> (string * string) list -> unit _r
-  val send : ?sample_rate:float -> (string * string) list -> unit _r
+  val send_with_ipaddr_and_port : string -> int -> string list -> unit _r
+  val send : data:string list -> unit _r
   val gauge : ?sample_rate:float -> string -> int -> unit _r
   val timing : ?sample_rate:float -> string -> int -> unit _r
   (** Log timing info. time is an int of milliseconds. *)
