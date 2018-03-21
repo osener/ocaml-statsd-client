@@ -5,23 +5,26 @@ module Base : sig
 
   (** https://docs.datadoghq.com/developers/dogstatsd/#metrics *)
   module Metric : sig
-    module Counter : sig
-      type t =
-        [ `Increment (** Increments by 1 *)
-        | `Decrement (** Decrements by 1 *)
-        | `Value of int ] (** Decrements or Increments by the given value *)
-    end
 
-    type typ =
-      [ `Counter of Counter.t
-      | `Gauge of float
-      | `Timer of float
-      | `Histogram of int
-      | `Set of string ]
+    module Value_type : sig
+      module Counter : sig
+        type t =
+          [ `Increment (** Increments by 1 *)
+          | `Decrement (** Decrements by 1 *)
+          | `Value of int ] (** Decrements or Increments by the given value *)
+      end
+
+      type t =
+        [ `Counter of Counter.t
+        | `Gauge of float
+        | `Timer of float
+        | `Histogram of int
+        | `Set of string ]
+    end
 
     type t =
       { metric_name : string
-      ; metric : typ
+      ; metric : Value_type.t
       ; sample_rate : float option
       (** Sample rates only work with `Counter, `Histogram and `Timer typ
           metrics *)
@@ -86,7 +89,7 @@ module type T = sig
     val send
       : ?tags:Base.Tag.t list
       -> ?sample_rate:float
-      -> Base.Metric.typ
+      -> Base.Metric.Value_type.t
       -> string
       -> unit _t
   end
