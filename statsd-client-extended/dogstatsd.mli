@@ -68,8 +68,8 @@ module Base : sig
   end
 end
 
-(* TODO: replace IO with {Async, Lwt, Sync} *)
-module IO : sig
+module type T = sig
+  type 'a _t
 
   module Metric : sig
     (** A couple of examples of how to send metrics:
@@ -80,16 +80,15 @@ module IO : sig
             (`Counter `Increment) ["application.page_views"]
         * Async.Metric.send
             (`Set "some-user-id") ["application.user_ids"]
-
     *)
 
-    val t_send : Base.Metric.t -> unit
+    val t_send : Base.Metric.t -> unit _t
     val send
       : ?tags:Base.Tag.t list
       -> ?sample_rate:float
       -> Base.Metric.typ
       -> string
-      -> unit
+      -> unit _t
   end
 
   module ServiceCheck : sig
@@ -104,7 +103,7 @@ module IO : sig
         ```
     *)
 
-    val t_send : Base.ServiceCheck.t -> unit
+    val t_send : Base.ServiceCheck.t -> unit _t
     val send
       : ?tags:Base.Tag.t list
       -> ?message:string
@@ -112,7 +111,7 @@ module IO : sig
       -> ?timestamp:int
       -> Base.ServiceCheck.status
       -> string
-      -> unit
+      -> unit _t
   end
 
   module Event : sig
@@ -127,7 +126,7 @@ module IO : sig
           ~text:"Some error message"
         ```
     *)
-    val t_send : Base.Event.t -> unit
+    val t_send : Base.Event.t -> unit _t
     val send
       : ?tags:Base.Tag.t list
       -> ?hostname:string
@@ -137,6 +136,9 @@ module IO : sig
       -> ?alert_type:Base.Event.alert
       -> title:string
       -> text:string
-      -> unit
+      -> unit _t
   end
 end
+
+module Make : functor (IO: Statsd_client_core.IO) ->
+  (T with type 'a _t := 'a IO._r)

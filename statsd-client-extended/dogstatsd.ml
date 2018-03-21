@@ -68,7 +68,49 @@ module Base = struct
   end
 end
 
-module IO = struct
+module type T = sig
+  type 'a _t
+  module Metric : sig
+    val t_send : Base.Metric.t -> unit _t
+    val send
+      : ?tags:Base.Tag.t list
+      -> ?sample_rate:float
+      -> Base.Metric.typ
+      -> string
+      -> unit _t
+  end
+
+  module ServiceCheck : sig
+    val t_send : Base.ServiceCheck.t -> unit _t
+    val send
+      : ?tags:Base.Tag.t list
+      -> ?message:string
+      -> ?hostname:string
+      -> ?timestamp:int
+      -> Base.ServiceCheck.status
+      -> string
+      -> unit _t
+  end
+
+  module Event : sig
+    val t_send : Base.Event.t -> unit _t
+    val send
+      : ?tags:Base.Tag.t list
+      -> ?hostname:string
+      -> ?timestamp:int
+      -> ?aggregation_key:string
+      -> ?source_type_name:string
+      -> ?alert_type:Base.Event.alert
+      -> title:string
+      -> text:string
+      -> unit _t
+  end
+end
+
+module Make (IO : Statsd_client_core.IO) :
+  (T with type 'a _t := 'a IO._r) = struct
+
+  module U = Statsd_client_core.Make(IO)
 
   module Metric = struct
     let t_send t = t |> ignore; failwith "not yet implemented"
