@@ -28,14 +28,14 @@ module Base = struct
         | `Gauge of float
         | `Timer of float
         | `Histogram of int
-        | `Set of string ]
+        | `Set of int ]
 
       let datagram_fmt = function
         | `Counter c -> Printf.sprintf "%s|c" (Counter.datagram_fmt c)
         | `Gauge g -> Printf.sprintf "%f|g" g
         | `Timer t -> Printf.sprintf "%f|ms" t
         | `Histogram h -> Printf.sprintf "%d|h" h
-        | `Set s -> failwith "not yet implemented"
+        | `Set s -> Printf.sprintf "%d|s" s
     end
 
     type t =
