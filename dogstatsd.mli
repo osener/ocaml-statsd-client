@@ -88,7 +88,7 @@ module IO : sig
       : ?tags:Base.Tag.t list
       -> ?sample_rate:float
       -> Base.Metric.typ
-      -> string list
+      -> string
       -> unit
   end
 
