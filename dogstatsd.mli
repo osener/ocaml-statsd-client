@@ -7,9 +7,9 @@ module Base : sig
   module Metric : sig
     module Counter : sig
       type t =
-        [ `Increment
-        | `Decrement
-        | `Value of int ]
+        [ `Increment (** Increments by 1 *)
+        | `Decrement (** Decrements by 1 *)
+        | `Value of int ] (** Decrements or Increments by the given value *)
     end
 
     type typ =
@@ -23,6 +23,8 @@ module Base : sig
       { metric_name : string
       ; metric : typ
       ; sample_rate : float option
+      (** Sample rates only work with `Counter, `Histogram and `Timer typ
+          metrics *)
       ; tags : Tag.t list }
   end
 
@@ -59,9 +61,9 @@ module Base : sig
       ; timestamp : int option
       ; hostname : string option
       ; aggregation_key : string option
-      ; priority : priority option (* defaults to Normal *)
+      ; priority : priority option (** defaults to `Normal *)
       ; source_type_name : string option
-      ; alert_type : alert option (* defaults to Info *)
+      ; alert_type : alert option (** defaults to `Info *)
       ; tags: Tag.t list }
   end
 end
