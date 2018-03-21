@@ -19,7 +19,7 @@ module Base : sig
         | `Gauge of float
         | `Timer of float
         | `Histogram of int
-        | `Set of string ]
+        | `Set of int ]
     end
 
     type t =
