@@ -1,0 +1,6 @@
+(jbuild_version 1)
+
+(library
+ ((name dogstatsd)
+  (public_name dogstatsd)
+  (libraries (statsd-client))))
