@@ -1,31 +1,62 @@
 module Base = struct
   module Tag = struct
     type t = string * string (** (tag-name, value) *)
+
+    let datagram_fmt l =
+      let format_tag (name, value) = Printf.sprintf "%s:%s" name value in
+      Printf.sprintf "|#%s" (String.concat "," (List.map format_tag l))
   end
 
   (** https://docs.datadoghq.com/developers/dogstatsd/#metrics *)
   module Metric = struct
-    module Counter = struct
-      type t =
-        [ `Increment (** Increments by 1 *)
-        | `Decrement (** Decrements by 1 *)
-        | `Value of int ] (** Decrements or Increments by the given value *)
-    end
 
-    type typ =
-      [ `Counter of Counter.t
-      | `Gauge of float
-      | `Timer of float
-      | `Histogram of int
-      | `Set of string ]
+    module Value_type = struct
+
+      module Counter = struct
+        type t =
+          [ `Increment (** Increments by 1 *)
+          | `Decrement (** Decrements by 1 *)
+          | `Value of int ] (** Decrements or Increments by the given value *)
+        let datagram_fmt = function
+          | `Increment -> "1"
+          | `Decrement -> "-1"
+          | `Value v -> Printf.sprintf "%d" v
+      end
+
+      type t =
+        [ `Counter of Counter.t
+        | `Gauge of float
+        | `Timer of float
+        | `Histogram of int
+        | `Set of string ]
+
+      let datagram_fmt = function
+        | `Counter c -> Printf.sprintf "%s|c" (Counter.datagram_fmt c)
+        | `Gauge g -> Printf.sprintf "%f|g" g
+        | `Timer t -> Printf.sprintf "%f|ms" t
+        | `Histogram h -> Printf.sprintf "%d|h" h
+        | `Set s -> failwith "not yet implemented"
+    end
 
     type t =
       { metric_name : string
-      ; metric : typ
+      ; metric : Value_type.t
       ; sample_rate : float option
       (** Sample rates only work with `Counter, `Histogram and `Timer typ
           metrics *)
       ; tags : Tag.t list }
+
+    let sample_rate_datagram_fmt = function
+      | None -> ""
+      | Some s -> Printf.sprintf "|@%f" s
+
+    let datagram_fmt t =
+      (** https://docs.datadoghq.com/developers/dogstatsd/#metrics-1 *)
+      Printf.sprintf "%s:%s%s%s"
+        t.metric_name
+        (Value_type.datagram_fmt t.metric)
+        (sample_rate_datagram_fmt t.sample_rate)
+        (Tag.datagram_fmt t.tags)
   end
 
   (** https://docs.datadoghq.com/developers/dogstatsd/#service-checks *)
@@ -75,7 +106,7 @@ module type T = sig
     val send
       : ?tags:Base.Tag.t list
       -> ?sample_rate:float
-      -> Base.Metric.typ
+      -> Base.Metric.Value_type.t
       -> string
       -> unit _t
   end
@@ -113,10 +144,14 @@ module Make (IO : Statsd_client_core.IO) :
   module U = Statsd_client_core.Make(IO)
 
   module Metric = struct
-    let t_send t = t |> ignore; failwith "not yet implemented"
-    let send ?tags ?sample_rate typ metric_name =
-      (tags, sample_rate, typ, metric_name) |> ignore;
-      failwith "not yet implemented"
+    let t_send t = U.send ~data:[Base.Metric.datagram_fmt t]
+    let send ?tags ?sample_rate metric metric_name =
+      let tags =
+        match tags with
+        | None -> []
+        | Some t -> t
+      in
+      t_send { Base.Metric.metric_name ; metric ; sample_rate ; tags }
   end
 
   module ServiceCheck = struct
