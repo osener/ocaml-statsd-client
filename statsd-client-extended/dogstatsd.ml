@@ -67,6 +67,12 @@ module Base = struct
         | `Warning
         | `Critical
         | `Unknown ]
+
+      let datagram_fmt = function
+        | `Ok -> "0"
+        | `Warning -> "1"
+        | `Critical -> "2"
+        | `Unknown -> "3"
     end
     type t =
       { name : string
@@ -75,6 +81,20 @@ module Base = struct
       ; hostname : string option
       ; tags : Tag.t list
       ; message: string option }
+
+    let datagram_fmt t =
+      (** https://docs.datadoghq.com/developers/dogstatsd/#service-checks-1 *)
+      let value_or_empty_str f = function
+        | None -> ""
+        | Some v -> f v
+      in
+      Printf.sprintf "_sc|%s|%s%s%s%s%s"
+        t.name
+        (Status.datagram_fmt t.status)
+        (value_or_empty_str (Printf.sprintf "|d:%d") t.timestamp)
+        (value_or_empty_str (Printf.sprintf "|h:%s") t.hostname)
+        (Tag.datagram_fmt t.tags)
+        (value_or_empty_str (Printf.sprintf "|m:%s") t.message)
   end
 
   (** https://docs.datadoghq.com/developers/dogstatsd/#events *)
@@ -139,8 +159,8 @@ module type T = sig
   end
 end
 
-module Make (IO : Statsd_client_core.IO) :
-  (T with type 'a _t := 'a IO._r) = struct
+module Make (IO : Statsd_client_core.IO)
+  : (T with type 'a _t := 'a IO._r) = struct
 
   module U = Statsd_client_core.Make(IO)
 
@@ -151,10 +171,14 @@ module Make (IO : Statsd_client_core.IO) :
   end
 
   module ServiceCheck = struct
-    let t_send t = t |> ignore; failwith "not yet implemented"
-    let send ?tags ?message ?hostname ?timestamp status check =
-      (tags, message, hostname, timestamp, status, check) |> ignore;
-      failwith "not yet implemented"
+    let t_send t = U.send ~data:[Base.ServiceCheck.datagram_fmt t]
+    let send ?(tags=[]) ?message ?hostname ?timestamp status name =
+      t_send { Base.ServiceCheck.name
+             ; status
+             ; timestamp
+             ; hostname
+             ; tags
+             ; message }
   end
 
   module Event = struct
