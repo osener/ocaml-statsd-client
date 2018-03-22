@@ -1,4 +1,9 @@
 module Base = struct
+
+  let value_or_empty_str f = function
+    | None -> ""
+    | Some v -> f v
+
   module Tag = struct
     type t = string * string (** (tag-name, value) *)
 
@@ -84,10 +89,6 @@ module Base = struct
 
     let datagram_fmt t =
       (** https://docs.datadoghq.com/developers/dogstatsd/#service-checks-1 *)
-      let value_or_empty_str f = function
-        | None -> ""
-        | Some v -> f v
-      in
       Printf.sprintf "_sc|%s|%s%s%s%s%s"
         t.name
         (Status.datagram_fmt t.status)
@@ -99,13 +100,35 @@ module Base = struct
 
   (** https://docs.datadoghq.com/developers/dogstatsd/#events *)
   module Event = struct
-    type priority = [ `Normal | `Low ]
 
-    type alert =
-      [ `Error
-      | `Warning
-      | `Info
-      | `Success ]
+    module Priority = struct
+      type t = [ `Normal | `Low ]
+
+      let datagram_fmt t =
+        let to_string = function
+          | `Normal -> "normal"
+          | `Low -> "low"
+        in
+        Printf.sprintf "|p:%s" (to_string t)
+
+    end
+
+    module Alert = struct
+      type t =
+        [ `Error
+        | `Warning
+        | `Info
+        | `Success ]
+
+      let datagram_fmt t =
+        let to_string = function
+          | `Error -> "error"
+          | `Warning -> "warning"
+          | `Info -> "info"
+          | `Success -> "success"
+        in
+        Printf.sprintf "|a:%s" (to_string t)
+    end
 
     type t =
       { title : string
@@ -113,10 +136,24 @@ module Base = struct
       ; timestamp : int option
       ; hostname : string option
       ; aggregation_key : string option
-      ; priority : priority option (** defaults to `Normal *)
+      ; priority : Priority.t option (** defaults to `Normal *)
       ; source_type_name : string option
-      ; alert_type : alert option (** defaults to `Info *)
+      ; alert_type : Alert.t option (** defaults to `Info *)
       ; tags: Tag.t list }
+
+    let datagram_fmt t =
+      (** https://docs.datadoghq.com/developers/dogstatsd/#events-1 *)
+      Printf.sprintf "_e{%d,%d}:%s|%s%s%s%s%s%s%s"
+        (String.length t.title)
+        (String.length t.text)
+        t.title
+        t.text
+        (value_or_empty_str (Printf.sprintf "|d:%d") t.timestamp)
+        (value_or_empty_str (Printf.sprintf "|h:%s") t.hostname)
+        (value_or_empty_str (Priority.datagram_fmt) t.priority)
+        (value_or_empty_str (Printf.sprintf "|s:%s") t.source_type_name)
+        (value_or_empty_str (Alert.datagram_fmt) t.alert_type)
+        (Tag.datagram_fmt t.tags)
   end
 end
 
@@ -151,8 +188,9 @@ module type T = sig
       -> ?hostname:string
       -> ?timestamp:int
       -> ?aggregation_key:string
+      -> ?priority:Base.Event.Priority.t
       -> ?source_type_name:string
-      -> ?alert_type:Base.Event.alert
+      -> ?alert_type:Base.Event.Alert.t
       -> title:string
       -> text:string
       -> unit _t
@@ -182,11 +220,17 @@ module Make (IO : Statsd_client_core.IO)
   end
 
   module Event = struct
-    let t_send t = t |> ignore; failwith "not yet implemented"
-    let send ?tags ?hostname ?timestamp ?aggregation_key ?source_type_name
-        ?alert_type ~title ~text =
-      (tags, hostname, timestamp, aggregation_key, source_type_name,
-       alert_type, title, text) |> ignore;
-      failwith "not yet implemented"
+    let t_send t = U.send ~data:[Base.Event.datagram_fmt t]
+    let send ?(tags=[]) ?hostname ?timestamp ?aggregation_key ?priority
+        ?source_type_name ?alert_type ~title ~text =
+      t_send { Base.Event.title
+             ; text
+             ; timestamp
+             ; hostname
+             ; aggregation_key
+             ; priority
+             ; source_type_name
+             ; alert_type
+             ; tags }
   end
 end
