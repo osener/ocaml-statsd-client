@@ -145,12 +145,7 @@ module Make (IO : Statsd_client_core.IO) :
 
   module Metric = struct
     let t_send t = U.send ~data:[Base.Metric.datagram_fmt t]
-    let send ?tags ?sample_rate metric metric_name =
-      let tags =
-        match tags with
-        | None -> []
-        | Some t -> t
-      in
+    let send ?(tags=[]) ?sample_rate metric metric_name =
       t_send { Base.Metric.metric_name ; metric ; sample_rate ; tags }
   end
 
