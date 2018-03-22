@@ -1,8 +1,10 @@
 opam-version: "1.2"
-maintainer: "Mike Wells"
+maintainer: "Mauricio Fernández"
 authors: [
   "Mr. Number"
   "Mike Wells"
+  "Mauricio Fernández"
+  "Brad Langel"
 ]
 license: "BSD3"
 homepage: "https://github.com/mfp/ocaml-statsd-client/"
