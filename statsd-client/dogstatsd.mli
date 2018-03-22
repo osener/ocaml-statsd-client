@@ -84,9 +84,9 @@ module type T = sig
         * Async.Metric.send
             ~tags:["tag1", "val1"; "tag2","val2"]
             ~sample_rate:0.1
-            (`Counter `Increment) ["application.page_views"]
+            (`Counter `Increment) "application.page_views"
         * Async.Metric.send
-            (`Set "some-user-id") ["application.user_ids"]
+            (`Set "some-user-id") "application.user_ids"
     *)
 
     val t_send : Metric.t -> unit _t
