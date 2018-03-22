@@ -1,7 +1,6 @@
 include Statsd_client_core.C
-val gauge : ?sample_rate:float -> string -> int -> unit Lwt.t
-val timing : ?sample_rate:float -> string -> int -> unit Lwt.t
-val timingf : ?sample_rate:float -> string -> float -> unit Lwt.t
-val update_stats : ?sample_rate:float -> int -> string list -> unit Lwt.t
-val increment : ?sample_rate:float -> string list -> unit Lwt.t
-val decrement : ?sample_rate:float -> string list -> unit Lwt.t
+
+include (Statsd_client_core.T with type 'a _r := 'a Lwt.t
+                               and type file_descr := Lwt_unix.file_descr)
+
+module Dogstatsd : (Dogstatsd.T with type 'a _t := 'a Lwt.t)
