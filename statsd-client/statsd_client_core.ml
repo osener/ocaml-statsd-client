@@ -1,8 +1,21 @@
-let ipaddr = ref None
-let port = ref None
+module type C = sig
+  val ipaddr : string option ref
+  val port : int option ref
 
-let log_debug = ref (fun s -> ())
-let log_error = ref (fun s -> Printf.eprintf "[error] %s\n%!" s)
+  val log_debug : (string -> unit) ref
+  (** Default: do nothing. *)
+
+  val log_error : (string -> unit) ref
+  (** Default: log to stderr. *)
+end
+
+module Config : C = struct
+  let ipaddr = ref None
+  let port = ref None
+
+  let log_debug = ref (fun s -> ())
+  let log_error = ref (fun s -> Printf.eprintf "[error] %s\n%!" s)
+end
 
 module type IO = sig
   val ipaddr         : unit -> string option
@@ -64,7 +77,7 @@ module Make (U : IO) :
           match !socket_ref with
             | Some s -> s
             | None   ->
-              !log_debug "Creating statsd socket";
+              !Config.log_debug "Creating statsd socket";
               let s = U.socket Unix.PF_INET Unix.SOCK_DGRAM proto in
               socket_ref := Some s;
               s
@@ -89,7 +102,7 @@ module Make (U : IO) :
                   socket_ref := None;
                   U.catch
                     (fun () ->
-                      !log_debug
+                      !Config.log_debug
                         (Printf.sprintf "Closing statsd socket: %d" retval);
                       U.close socket >>= U.return)
                     (fun _e -> U.return ());
@@ -105,7 +118,7 @@ module Make (U : IO) :
   let send ?(sample_rate = 1.0) data =
     match U.ipaddr (), U.port () with
       | None, _ | _, None ->
-        !log_error
+        !Config.log_error
           "Statsd_client.send: \
            uninitialized Statsd_client.host or Statsd_client.port";
         U.return ()

@@ -1,11 +1,15 @@
-val ipaddr : string option ref
-val port : int option ref
+module type C = sig
+  val ipaddr : string option ref
+  val port : int option ref
 
-val log_debug : (string -> unit) ref
+  val log_debug : (string -> unit) ref
   (** Default: do nothing. *)
 
-val log_error : (string -> unit) ref
+  val log_error : (string -> unit) ref
   (** Default: log to stderr. *)
+end
+
+module Config : C
 
 module type IO = sig
   val ipaddr         : unit -> string option

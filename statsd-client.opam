@@ -15,5 +15,5 @@ build: [
 
 depends: [
   "jbuilder" {build}
-  "statsd-client-lwt"
+  "lwt"
 ]

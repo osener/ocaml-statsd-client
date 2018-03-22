@@ -1,3 +1,4 @@
+include Statsd_client_core.C
 val gauge : ?sample_rate:float -> string -> int -> unit Async.Deferred.t
 val timing : ?sample_rate:float -> string -> int -> unit Async.Deferred.t
 val timingf : ?sample_rate:float -> string -> float -> unit Async.Deferred.t
