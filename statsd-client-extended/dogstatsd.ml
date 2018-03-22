@@ -61,15 +61,16 @@ module Base = struct
 
   (** https://docs.datadoghq.com/developers/dogstatsd/#service-checks *)
   module ServiceCheck = struct
-    type status =
-      [ `Ok
-      | `Warning
-      | `Critical
-      | `Unknown ]
-
+    module Status = struct
+      type t =
+        [ `Ok
+        | `Warning
+        | `Critical
+        | `Unknown ]
+    end
     type t =
       { name : string
-      ; status : status
+      ; status : Status.t
       ; timestamp : int option
       ; hostname : string option
       ; tags : Tag.t list
@@ -118,7 +119,7 @@ module type T = sig
       -> ?message:string
       -> ?hostname:string
       -> ?timestamp:int
-      -> Base.ServiceCheck.status
+      -> Base.ServiceCheck.Status.t
       -> string
       -> unit _t
   end
