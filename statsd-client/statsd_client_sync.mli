@@ -1,3 +1,4 @@
+include Statsd_client_core.C
 val gauge : ?sample_rate:float -> string -> int -> unit
 val timing : ?sample_rate:float -> string -> int -> unit
 val timingf : ?sample_rate:float -> string -> float -> unit

@@ -1,10 +1,11 @@
+include Statsd_client_core.Config
 include Statsd_client_core.Make (
   struct
     open Core
     open Async
 
-    let ipaddr () = !Statsd_client_core.ipaddr
-    let port () = !Statsd_client_core.port
+    let ipaddr () = !Statsd_client_core.Config.ipaddr
+    let port () = !Statsd_client_core.Config.port
 
     type 'a _r = 'a Deferred.t
     let ( >>= ) = ( >>= )
