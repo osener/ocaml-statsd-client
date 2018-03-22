@@ -1,80 +1,78 @@
-module Base : sig
-  module Tag : sig
-    type t = string * string (** (tag-name, value) *)
-  end
+module Tag : sig
+  type t = string * string (** (name, value) *)
+end
 
-  (** https://docs.datadoghq.com/developers/dogstatsd/#metrics *)
-  module Metric : sig
+(** https://docs.datadoghq.com/developers/dogstatsd/#metrics *)
+module Metric : sig
 
-    module Value_type : sig
-      module Counter : sig
-        type t =
-          [ `Increment (** Increments by 1 *)
-          | `Decrement (** Decrements by 1 *)
-          | `Value of int ] (** Decrements or Increments by the given value *)
-      end
-
+  module Value_type : sig
+    module Counter : sig
       type t =
-        [ `Counter of Counter.t
-        | `Gauge of float
-        | `Timer of float
-        | `Histogram of int
-        | `Set of int ]
+        [ `Increment (** Increments by 1 *)
+        | `Decrement (** Decrements by 1 *)
+        | `Value of int ] (** Decrements or Increments by the given value *)
     end
 
     type t =
-      { metric_name : string
-      ; metric : Value_type.t
-      ; sample_rate : float option
-      (** Sample rates only work with `Counter, `Histogram and `Timer typ
-          metrics *)
-      ; tags : Tag.t list }
+      [ `Counter of Counter.t
+      | `Gauge of float
+      | `Timer of float
+      | `Histogram of int
+      | `Set of int ]
   end
 
-  (** https://docs.datadoghq.com/developers/dogstatsd/#service-checks *)
-  module ServiceCheck : sig
-    module Status : sig
-      type t =
-        [ `Ok
-        | `Warning
-        | `Critical
-        | `Unknown ]
-    end
+  type t =
+    { metric_name : string
+    ; metric : Value_type.t
+    ; sample_rate : float option
+    (** Sample rates only work with `Counter, `Histogram and `Timer typ
+        metrics *)
+    ; tags : Tag.t list }
+end
 
+(** https://docs.datadoghq.com/developers/dogstatsd/#service-checks *)
+module ServiceCheck : sig
+  module Status : sig
     type t =
-      { name : string
-      ; status : Status.t
-      ; timestamp : int option
-      ; hostname : string option
-      ; tags : Tag.t list
-      ; message: string option }
+      [ `Ok
+      | `Warning
+      | `Critical
+      | `Unknown ]
   end
 
-  (** https://docs.datadoghq.com/developers/dogstatsd/#events *)
-  module Event : sig
-    module Priority : sig
-      type t = [ `Normal | `Low ]
-    end
+  type t =
+    { name : string
+    ; status : Status.t
+    ; timestamp : int option
+    ; hostname : string option
+    ; tags : Tag.t list
+    ; message: string option }
+end
 
-    module Alert : sig
-      type t =
-        [ `Error
-        | `Warning
-        | `Info
-        | `Success ]
-    end
+(** https://docs.datadoghq.com/developers/dogstatsd/#events *)
+module Event : sig
+  module Priority : sig
+    type t = [ `Normal | `Low ]
+  end
 
+  module Alert : sig
     type t =
-      { title : string
-      ; text : string
-      ; timestamp : int option
-      ; hostname : string option
-      ; aggregation_key : string option
-      ; priority : Priority.t option (** defaults to `Normal *)
-      ; source_type_name : string option
-      ; alert_type : Alert.t option (** defaults to `Info *)
-      ; tags: Tag.t list }
+      [ `Error
+      | `Warning
+      | `Info
+      | `Success ]
   end
+
+  type t =
+    { title : string
+    ; text : string
+    ; timestamp : int option
+    ; hostname : string option
+    ; aggregation_key : string option
+    ; priority : Priority.t option (** defaults to `Normal *)
+    ; source_type_name : string option
+    ; alert_type : Alert.t option (** defaults to `Info *)
+    ; tags: Tag.t list }
 end
 
 module type T = sig
@@ -91,11 +89,11 @@ module type T = sig
             (`Set "some-user-id") ["application.user_ids"]
     *)
 
-    val t_send : Base.Metric.t -> unit _t
+    val t_send : Metric.t -> unit _t
     val send
-      : ?tags:Base.Tag.t list
+      : ?tags:Tag.t list
       -> ?sample_rate:float
-      -> Base.Metric.Value_type.t
+      -> Metric.Value_type.t
       -> string
       -> unit _t
   end
@@ -112,13 +110,13 @@ module type T = sig
         ```
     *)
 
-    val t_send : Base.ServiceCheck.t -> unit _t
+    val t_send : ServiceCheck.t -> unit _t
     val send
-      : ?tags:Base.Tag.t list
+      : ?tags:Tag.t list
       -> ?message:string
       -> ?hostname:string
       -> ?timestamp:int
-      -> Base.ServiceCheck.Status.t
+      -> ServiceCheck.Status.t
       -> string
       -> unit _t
   end
@@ -135,15 +133,15 @@ module type T = sig
           ~text:"Some error message"
         ```
     *)
-    val t_send : Base.Event.t -> unit _t
+    val t_send : Event.t -> unit _t
     val send
-      : ?tags:Base.Tag.t list
+      : ?tags:Tag.t list
       -> ?hostname:string
       -> ?timestamp:int
       -> ?aggregation_key:string
-      -> ?priority:Base.Event.Priority.t
+      -> ?priority:Event.Priority.t
       -> ?source_type_name:string
-      -> ?alert_type:Base.Event.Alert.t
+      -> ?alert_type:Event.Alert.t
       -> title:string
       -> text:string
       -> unit _t
