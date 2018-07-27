@@ -11,6 +11,7 @@ include Statsd_client_core.Make (
     let list_iter f lst = List.iter f lst
 
     include Unix
+    let sendto = sendto_substring
     let socket dom typ proto = Unix.socket dom typ proto
   end
 )
