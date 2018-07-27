@@ -10,6 +10,9 @@ module T = struct
   let list_iter = Lwt_list.iter_p
 
   include Lwt_unix
+  let sendto fd msg offset msg_length flags socket_address =
+    let msg = Bytes.of_string msg in
+    Lwt_unix.sendto fd msg offset msg_length flags socket_address
   let socket dom typ proto = Lwt_unix.socket dom typ proto
 end
 
