@@ -22,7 +22,10 @@ module Metric = struct
       type t =
         [ `Increment (** Increments by 1 *)
         | `Decrement (** Decrements by 1 *)
-        | `Value of int ] [@@deriving sexp] (** Decrements or Increments by the given value *)
+        | `Value of int ] 
+        [@@deriving sexp] 
+        (** Decrements or Increments by the given value *)
+
       let datagram_fmt = function
         | `Increment -> "1"
         | `Decrement -> "-1"
@@ -34,7 +37,8 @@ module Metric = struct
       | `Gauge of float
       | `Timer of float
       | `Histogram of int
-      | `Set of int ] [@@deriving sexp]
+      | `Set of int ] 
+      [@@deriving sexp]
 
     let datagram_fmt = function
       | `Counter c -> Printf.sprintf "%s|c" (Counter.datagram_fmt c)
@@ -50,7 +54,8 @@ module Metric = struct
     ; sample_rate : float option
     (** Sample rates only work with `Counter, `Histogram and `Timer typ
         metrics *)
-    ; tags : Tag.t list } [@@deriving sexp]
+    ; tags : Tag.t list }
+    [@@deriving sexp]
 
   let sample_rate_datagram_fmt = function
     | None -> ""
@@ -73,7 +78,8 @@ module ServiceCheck = struct
       [ `Ok
       | `Warning
       | `Critical
-      | `Unknown ] [@@deriving sexp]
+      | `Unknown ] 
+      [@@deriving sexp]
 
     let datagram_fmt = function
       | `Ok -> "0"
@@ -87,7 +93,8 @@ module ServiceCheck = struct
     ; timestamp : int option
     ; hostname : string option
     ; tags : Tag.t list
-    ; message: string option } [@@deriving sexp]
+    ; message: string option } 
+    [@@deriving sexp]
 
   (** For datagram format see:
       https://docs.datadoghq.com/developers/dogstatsd/#service-checks-1 *)
@@ -121,7 +128,8 @@ module Event = struct
       [ `Error
       | `Warning
       | `Info
-      | `Success ] [@@deriving sexp]
+      | `Success ] 
+      [@@deriving sexp]
 
     let datagram_fmt t =
       let to_string = function
@@ -142,7 +150,8 @@ module Event = struct
     ; priority : Priority.t option (** defaults to `Normal *)
     ; source_type_name : string option
     ; alert_type : Alert.t option (** defaults to `Info *)
-    ; tags: Tag.t list } [@@deriving sexp]
+    ; tags: Tag.t list } 
+    [@@deriving sexp]
 
   (** For datagram format see:
       https://docs.datadoghq.com/developers/dogstatsd/#events-1 *)
