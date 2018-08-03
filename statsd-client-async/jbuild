@@ -3,4 +3,5 @@
 (library
  ((name statsd_client_async)
   (public_name statsd-client-async)
-  (libraries (async))))
+  (preprocess (pps (ppx_sexp_conv)))
+  (libraries (sexplib async))))

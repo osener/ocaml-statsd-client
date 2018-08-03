@@ -3,4 +3,5 @@
 (library
  ((name statsd_client_lwt)
   (public_name statsd-client-lwt)
-  (libraries (lwt.unix))))
+  (preprocess (pps (ppx_sexp_conv)))
+  (libraries (sexplib lwt.unix))))
