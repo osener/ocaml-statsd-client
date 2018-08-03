@@ -89,6 +89,7 @@ module type T = sig
             (`Set "some-user-id") "application.user_ids"
     *)
 
+    type t = Metric.t
     val t_send : Metric.t -> unit _t
     val send
       : ?tags:Tag.t list
@@ -96,6 +97,7 @@ module type T = sig
       -> Metric.Value_type.t
       -> string
       -> unit _t
+
   end
 
   module ServiceCheck : sig
@@ -110,6 +112,7 @@ module type T = sig
         ```
     *)
 
+    type t = ServiceCheck.t
     val t_send : ServiceCheck.t -> unit _t
     val send
       : ?tags:Tag.t list
@@ -133,6 +136,8 @@ module type T = sig
           ~text:"Some error message"
         ```
     *)
+
+    type t = Event.t
     val t_send : Event.t -> unit _t
     val send
       : ?tags:Tag.t list

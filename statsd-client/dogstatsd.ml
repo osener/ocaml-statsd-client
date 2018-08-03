@@ -160,6 +160,7 @@ end
 module type T = sig
   type 'a _t
   module Metric : sig
+    type t = Metric.t
     val t_send : Metric.t -> unit _t
     val send
       : ?tags:Tag.t list
@@ -170,6 +171,7 @@ module type T = sig
   end
 
   module ServiceCheck : sig
+    type t = ServiceCheck.t
     val t_send : ServiceCheck.t -> unit _t
     val send
       : ?tags:Tag.t list
@@ -182,6 +184,7 @@ module type T = sig
   end
 
   module Event : sig
+    type t = Event.t
     val t_send : Event.t -> unit _t
     val send
       : ?tags:Tag.t list
@@ -203,12 +206,14 @@ module Make (IO : Statsd_client_core.IO)
   module U = Statsd_client_core.Make(IO)
 
   module Metric = struct
+    type t = Metric.t  
     let t_send t = U.send ~data:[Metric.datagram_fmt t]
     let send ?(tags=[]) ?sample_rate metric metric_name =
       t_send { Metric.metric_name ; metric ; sample_rate ; tags }
   end
 
   module ServiceCheck = struct
+    type t = ServiceCheck.t
     let t_send t = U.send ~data:[ServiceCheck.datagram_fmt t]
     let send ?(tags=[]) ?message ?hostname ?timestamp status name =
       t_send { ServiceCheck.name
@@ -220,6 +225,7 @@ module Make (IO : Statsd_client_core.IO)
   end
 
   module Event = struct
+    type t = Event.t
     let t_send t = U.send ~data:[Event.datagram_fmt t]
     let send ?(tags=[]) ?hostname ?timestamp ?aggregation_key ?priority
         ?source_type_name ?alert_type ~title ~text =
