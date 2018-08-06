@@ -1,4 +1,5 @@
-module type Types = sig
+(** https://docs.datadoghq.com/developers/dogstatsd/ *)
+module type S = sig
   type 'a _t
 
   module Tag : sig

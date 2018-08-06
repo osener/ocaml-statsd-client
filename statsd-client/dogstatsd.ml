@@ -4,10 +4,7 @@ let value_or_empty_str f = function
   | None -> ""
   | Some v -> f v
 
-(** https://docs.datadoghq.com/developers/dogstatsd/ *)
-module type T = sig
-  include Dogstatsd_types.Types
-end
+module type T = Dogstatsd_intf.S
 
 module Make (IO : Statsd_client_core.IO)
   : (T with type 'a _t := 'a IO._r) = struct
