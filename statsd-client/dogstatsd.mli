@@ -1,82 +1,10 @@
-module Tag : sig
-  type t = string * string (** (name, value) *)
-end
-
-(** https://docs.datadoghq.com/developers/dogstatsd/#metrics *)
-module Metric : sig
-
-  module Value_type : sig
-    module Counter : sig
-      type t =
-        [ `Increment (** Increments by 1 *)
-        | `Decrement (** Decrements by 1 *)
-        | `Value of int ] (** Decrements or Increments by the given value *)
-    end
-
-    type t =
-      [ `Counter of Counter.t
-      | `Gauge of float
-      | `Timer of float
-      | `Histogram of int
-      | `Set of int ]
-  end
-
-  type t =
-    { metric_name : string
-    ; metric : Value_type.t
-    ; sample_rate : float option
-    (** Sample rates only work with `Counter, `Histogram and `Timer typ
-        metrics *)
-    ; tags : Tag.t list }
-end
-
-(** https://docs.datadoghq.com/developers/dogstatsd/#service-checks *)
-module ServiceCheck : sig
-  module Status : sig
-    type t =
-      [ `Ok
-      | `Warning
-      | `Critical
-      | `Unknown ]
-  end
-
-  type t =
-    { name : string
-    ; status : Status.t
-    ; timestamp : int option
-    ; hostname : string option
-    ; tags : Tag.t list
-    ; message: string option }
-end
-
-(** https://docs.datadoghq.com/developers/dogstatsd/#events *)
-module Event : sig
-  module Priority : sig
-    type t = [ `Normal | `Low ]
-  end
-
-  module Alert : sig
-    type t =
-      [ `Error
-      | `Warning
-      | `Info
-      | `Success ]
-  end
-
-  type t =
-    { title : string
-    ; text : string
-    ; timestamp : int option
-    ; hostname : string option
-    ; aggregation_key : string option
-    ; priority : Priority.t option (** defaults to `Normal *)
-    ; source_type_name : string option
-    ; alert_type : Alert.t option (** defaults to `Info *)
-    ; tags: Tag.t list }
-end
-
 module type T = sig
   type 'a _t
+
+  module Tag : sig
+    type t = string * string (** (name, value) *) 
+    [@@deriving sexp] 
+  end
 
   module Metric : sig
     (** A couple of examples of how to send metrics:
@@ -89,19 +17,48 @@ module type T = sig
             (`Set "some-user-id") "application.user_ids"
     *)
 
-    type t = Metric.t [@@deriving sexp] 
-    val t_send : Metric.t -> unit _t
+    module Value_type : sig
+      module Counter : sig
+        type t =
+          [ `Increment (** Increments by 1 *)
+          | `Decrement (** Decrements by 1 *)
+          | `Value of int ] 
+        [@@deriving sexp]  (** Decrements or Increments by the given value *)
+      end
+
+      type t =
+        [ `Counter of Counter.t
+        | `Gauge of float
+        | `Timer of float
+        | `Histogram of int
+        | `Set of int ] 
+      [@@deriving sexp] 
+    end
+
+    type t = 
+      { metric_name : string
+      ; metric : Value_type.t
+      ; sample_rate : float option
+      (** Sample rates only work with `Counter, `Histogram and `Timer typ
+          metrics *)
+      ; tags : Tag.t list } 
+    [@@deriving sexp] 
+
+    val t_send : t -> unit _t
+
     val send
       : ?tags:Tag.t list
       -> ?sample_rate:float
-      -> Metric.Value_type.t
+      -> Value_type.t
       -> string
       -> unit _t
 
   end
 
   module ServiceCheck : sig
-    (** An example of how to send Service Checks:
+    (** See https://docs.datadoghq.com/developers/dogstatsd/#service-checks
+
+        An example of how to send Service Checks:
 
         ```
         Async.ServiceCheck.send
@@ -112,20 +69,40 @@ module type T = sig
         ```
     *)
 
-    type t = ServiceCheck.t [@@deriving sexp] 
-    val t_send : ServiceCheck.t -> unit _t
+    module Status : sig
+      type t =
+        [ `Ok
+        | `Warning
+        | `Critical
+        | `Unknown ] 
+      [@@deriving sexp] 
+    end
+
+    type t =   
+      { name : string
+      ; status : Status.t
+      ; timestamp : int option
+      ; hostname : string option
+      ; tags : Tag.t list
+      ; message: string option } 
+    [@@deriving sexp] 
+
+    val t_send : t -> unit _t
+
     val send
       : ?tags:Tag.t list
       -> ?message:string
       -> ?hostname:string
       -> ?timestamp:int
-      -> ServiceCheck.Status.t
+      -> Status.t
       -> string
       -> unit _t
   end
 
   module Event : sig
-    (** An example of how to send Events:
+    (** See https://docs.datadoghq.com/developers/dogstatsd/#events
+
+        An example of how to send Events:
 
         ```
         Async.Event.send
@@ -137,16 +114,42 @@ module type T = sig
         ```
     *)
 
-    type t = Event.t [@@deriving sexp] 
-    val t_send : Event.t -> unit _t
+    module Priority : sig
+      type t = [ `Normal | `Low ] 
+      [@@deriving sexp] 
+    end
+
+    module Alert : sig
+      type t =
+        [ `Error
+        | `Warning
+        | `Info
+        | `Success ]
+      [@@deriving sexp] 
+    end
+
+    type t =
+      { title : string
+      ; text : string
+      ; timestamp : int option
+      ; hostname : string option
+      ; aggregation_key : string option
+      ; priority : Priority.t option (** defaults to `Normal *)
+      ; source_type_name : string option
+      ; alert_type : Alert.t option (** defaults to `Info *)
+      ; tags: Tag.t list } 
+    [@@deriving sexp] 
+
+    val t_send : t -> unit _t
+
     val send
       : ?tags:Tag.t list
       -> ?hostname:string
       -> ?timestamp:int
       -> ?aggregation_key:string
-      -> ?priority:Event.Priority.t
+      -> ?priority:Priority.t
       -> ?source_type_name:string
-      -> ?alert_type:Event.Alert.t
+      -> ?alert_type:Alert.t
       -> title:string
       -> text:string
       -> unit _t
