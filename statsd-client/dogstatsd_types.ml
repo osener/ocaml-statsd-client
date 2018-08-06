@@ -57,9 +57,7 @@ module type Types = sig
   end
 
   module ServiceCheck : sig
-    (** See https://docs.datadoghq.com/developers/dogstatsd/#service-checks
-
-        An example of how to send Service Checks:
+    (** An example of how to send Service Checks:
 
         ```
         Async.ServiceCheck.send
@@ -101,9 +99,7 @@ module type Types = sig
   end
 
   module Event : sig
-    (** See https://docs.datadoghq.com/developers/dogstatsd/#events
-
-        An example of how to send Events:
+    (** An example of how to send Events:
 
         ```
         Async.Event.send

@@ -4,6 +4,7 @@ let value_or_empty_str f = function
   | None -> ""
   | Some v -> f v
 
+(** https://docs.datadoghq.com/developers/dogstatsd/ *)
 module type T = sig
   include Dogstatsd_types.Types
 end
@@ -21,7 +22,6 @@ module Make (IO : Statsd_client_core.IO)
       Printf.sprintf "|#%s" (String.concat "," (List.map format_tag l))
   end
 
-  (** https://docs.datadoghq.com/developers/dogstatsd/#metrics *)
   module Metric = struct
     module Value_type = struct
       module Counter = struct
@@ -68,7 +68,7 @@ module Make (IO : Statsd_client_core.IO)
       | Some s -> Printf.sprintf "|@%f" s
 
     (** For datagram format see:
-        https://docs.datadoghq.com/developers/dogstatsd/#metrics-1 *)
+        https://docs.datadoghq.com/developers/dogstatsd/datagram_shell/#metrics *)
     let datagram_fmt t =
       Printf.sprintf "%s:%s%s%s"
         t.metric_name
@@ -81,7 +81,6 @@ module Make (IO : Statsd_client_core.IO)
       t_send { metric_name ; metric ; sample_rate ; tags }
   end
 
-  (** https://docs.datadoghq.com/developers/dogstatsd/#service-checks *)
   module ServiceCheck = struct
     module Status = struct
       type t =
@@ -107,7 +106,7 @@ module Make (IO : Statsd_client_core.IO)
     [@@deriving sexp]
 
     (** For datagram format see:
-        https://docs.datadoghq.com/developers/dogstatsd/#service-checks-1 *)
+        https://docs.datadoghq.com/developers/dogstatsd/datagram_shell/#service-checks *)
     let datagram_fmt t =
       Printf.sprintf "_sc|%s|%s%s%s%s%s"
         t.name
@@ -127,7 +126,6 @@ module Make (IO : Statsd_client_core.IO)
              ; message }
   end
 
-  (** https://docs.datadoghq.com/developers/dogstatsd/#events *)
   module Event = struct
     module Priority = struct
       type t = [ `Normal | `Low ] [@@deriving sexp]
@@ -172,7 +170,7 @@ module Make (IO : Statsd_client_core.IO)
     [@@deriving sexp]
 
     (** For datagram format see:
-        https://docs.datadoghq.com/developers/dogstatsd/#events-1 *)
+        https://docs.datadoghq.com/developers/dogstatsd/datagram_shell/#events *)
     let datagram_fmt t =
       Printf.sprintf "_e{%d,%d}:%s|%s%s%s%s%s%s%s"
         (String.length t.title)
