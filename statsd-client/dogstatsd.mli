@@ -89,7 +89,7 @@ module type T = sig
             (`Set "some-user-id") "application.user_ids"
     *)
 
-    type t = Metric.t
+    type t = Metric.t [@@deriving sexp] 
     val t_send : Metric.t -> unit _t
     val send
       : ?tags:Tag.t list
@@ -112,7 +112,7 @@ module type T = sig
         ```
     *)
 
-    type t = ServiceCheck.t
+    type t = ServiceCheck.t [@@deriving sexp] 
     val t_send : ServiceCheck.t -> unit _t
     val send
       : ?tags:Tag.t list
@@ -137,7 +137,7 @@ module type T = sig
         ```
     *)
 
-    type t = Event.t
+    type t = Event.t [@@deriving sexp] 
     val t_send : Event.t -> unit _t
     val send
       : ?tags:Tag.t list

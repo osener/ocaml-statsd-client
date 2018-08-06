@@ -23,8 +23,8 @@ module Metric = struct
         [ `Increment (** Increments by 1 *)
         | `Decrement (** Decrements by 1 *)
         | `Value of int ] 
-        [@@deriving sexp] 
-        (** Decrements or Increments by the given value *)
+      [@@deriving sexp] 
+      (** Decrements or Increments by the given value *)
 
       let datagram_fmt = function
         | `Increment -> "1"
@@ -38,7 +38,7 @@ module Metric = struct
       | `Timer of float
       | `Histogram of int
       | `Set of int ] 
-      [@@deriving sexp]
+    [@@deriving sexp]
 
     let datagram_fmt = function
       | `Counter c -> Printf.sprintf "%s|c" (Counter.datagram_fmt c)
@@ -55,7 +55,7 @@ module Metric = struct
     (** Sample rates only work with `Counter, `Histogram and `Timer typ
         metrics *)
     ; tags : Tag.t list }
-    [@@deriving sexp]
+  [@@deriving sexp]
 
   let sample_rate_datagram_fmt = function
     | None -> ""
@@ -79,7 +79,7 @@ module ServiceCheck = struct
       | `Warning
       | `Critical
       | `Unknown ] 
-      [@@deriving sexp]
+    [@@deriving sexp]
 
     let datagram_fmt = function
       | `Ok -> "0"
@@ -94,7 +94,7 @@ module ServiceCheck = struct
     ; hostname : string option
     ; tags : Tag.t list
     ; message: string option } 
-    [@@deriving sexp]
+  [@@deriving sexp]
 
   (** For datagram format see:
       https://docs.datadoghq.com/developers/dogstatsd/#service-checks-1 *)
@@ -129,7 +129,7 @@ module Event = struct
       | `Warning
       | `Info
       | `Success ] 
-      [@@deriving sexp]
+    [@@deriving sexp]
 
     let datagram_fmt t =
       let to_string = function
@@ -151,7 +151,7 @@ module Event = struct
     ; source_type_name : string option
     ; alert_type : Alert.t option (** defaults to `Info *)
     ; tags: Tag.t list } 
-    [@@deriving sexp]
+  [@@deriving sexp]
 
   (** For datagram format see:
       https://docs.datadoghq.com/developers/dogstatsd/#events-1 *)
@@ -172,7 +172,7 @@ end
 module type T = sig
   type 'a _t
   module Metric : sig
-    type t = Metric.t
+    type t = Metric.t [@@deriving sexp] 
     val t_send : Metric.t -> unit _t
     val send
       : ?tags:Tag.t list
@@ -183,7 +183,7 @@ module type T = sig
   end
 
   module ServiceCheck : sig
-    type t = ServiceCheck.t
+    type t = ServiceCheck.t [@@deriving sexp] 
     val t_send : ServiceCheck.t -> unit _t
     val send
       : ?tags:Tag.t list
@@ -196,7 +196,7 @@ module type T = sig
   end
 
   module Event : sig
-    type t = Event.t
+    type t = Event.t [@@deriving sexp] 
     val t_send : Event.t -> unit _t
     val send
       : ?tags:Tag.t list
@@ -218,14 +218,14 @@ module Make (IO : Statsd_client_core.IO)
   module U = Statsd_client_core.Make(IO)
 
   module Metric = struct
-    type t = Metric.t
+    type t = Metric.t [@@deriving sexp] 
     let t_send t = U.send ~data:[Metric.datagram_fmt t]
     let send ?(tags=[]) ?sample_rate metric metric_name =
       t_send { Metric.metric_name ; metric ; sample_rate ; tags }
   end
 
   module ServiceCheck = struct
-    type t = ServiceCheck.t
+    type t = ServiceCheck.t [@@deriving sexp] 
     let t_send t = U.send ~data:[ServiceCheck.datagram_fmt t]
     let send ?(tags=[]) ?message ?hostname ?timestamp status name =
       t_send { ServiceCheck.name
@@ -237,7 +237,7 @@ module Make (IO : Statsd_client_core.IO)
   end
 
   module Event = struct
-    type t = Event.t
+    type t = Event.t [@@deriving sexp] 
     let t_send t = U.send ~data:[Event.datagram_fmt t]
     let send ?(tags=[]) ?hostname ?timestamp ?aggregation_key ?priority
         ?source_type_name ?alert_type ~title ~text =
